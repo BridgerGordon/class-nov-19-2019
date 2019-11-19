@@ -10,6 +10,7 @@ knitr::opts_chunk$set(echo = FALSE)
 library(tidyverse)
 library(tidymodels)
 library(skimr)
+
 ```
 
 ```{r}
@@ -39,7 +40,7 @@ x <- raw %>%
   mutate(female = ifelse(gender == "Female", 1, 0)) %>%
   select(dvote, female, response, gender)
 
-glm(data = x, formula = dvote ~ female)
+reg <- glm(data = x, formula = dvote ~ female, family = "binomial")
 
 ggplot(x, aes(x = female, y = dvote)) +
   geom_jitter(height = 0.1, alpha = 0.05) +
@@ -47,6 +48,12 @@ ggplot(x, aes(x = female, y = dvote)) +
 
 fs::file_delete(c("master.zip", "2018-live-poll-results-master/"))
   
+
+my_data <- tibble(female = c(0,0,1))
+predict(reg, newdata = my_data, type = "response")
+
+prediction <- x %>%
+  mutate(predict = predict(reg, type = "response"))
 
 ```
 
