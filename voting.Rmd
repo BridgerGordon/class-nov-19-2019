@@ -1,0 +1,52 @@
+---
+title: "pair_programming"
+author: "Bridger Gordon"
+date: "11/19/2019"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(tidymodels)
+library(skimr)
+```
+
+```{r}
+
+download.file("https://github.com/TheUpshot/2018-live-poll-results/archive/master.zip", destfile = "master.zip")
+unzip("master.zip")
+
+my_list <- fs::dir_ls("2018-live-poll-results-master/data/")
+
+# name_list <- list.files(path = "./2018-live-poll-results-master/data/", pattern = "*.csv")
+
+raw <- map_dfr(my_list, ~read_csv(.x, col_types = cols(
+       .default = col_character(),
+        turnout_scale = col_double(),
+        turnout_score = col_double(),
+        w_LV = col_double(),
+        w_RV = col_double(),
+        final_weight = col_double(),
+        timestamp = col_datetime(format = "")
+      )), .id = "source")
+
+raw %>%
+  count(source)
+
+x <- raw %>% 
+  mutate(dvote = ifelse(response == "Dem", 1, 0)) %>%
+  mutate(female = ifelse(gender == "Female", 1, 0)) %>%
+  select(dvote, female, response, gender)
+
+glm(data = x, formula = dvote ~ female)
+
+ggplot(x, aes(x = female, y = dvote)) +
+  geom_jitter(height = 0.1, alpha = 0.05) +
+  geom_smooth(method = "glm", method.args = list(family = "binomial"))
+
+fs::file_delete(c("master.zip", "2018-live-poll-results-master/"))
+  
+
+```
+
